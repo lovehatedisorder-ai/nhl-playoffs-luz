@@ -21,15 +21,15 @@
     <script type="text/babel">
         const { useState, useRef } = React;
 
-        // ÉQUIPES QUALIFIÉES POUR LE ROUND 2 (MAI 2026)
+        // ÉQUIPES SELON TON IMAGE
         const INITIAL_TEAMS = {
             west: [
-                { id: 'w_r2_1', t1: 'Avalanche', city1: 'Colorado', t2: 'Stars', city2: 'Dallas', s1: 0, s2: 0, seed1: '1', seed2: '2' },
-                { id: 'w_r2_2', t1: 'Golden Knights', city1: 'Vegas', t2: 'Oilers', city2: 'Edmonton', s1: 0, s2: 0, seed1: '1', seed2: '2' },
+                { id: 'w_r2_1', t1: 'Avalanche', city1: 'Colorado', t2: 'Wild', city2: 'Minnesota', s1: 0, s2: 0, seed1: '1', seed2: '3', icon1: '🏔️', icon2: '🌲' },
+                { id: 'w_r2_2', t1: 'Golden Knights', city1: 'Vegas', t2: 'Ducks', city2: 'Anaheim', s1: 0, s2: 0, seed1: '1', seed2: '3', icon1: '⚔️', icon2: '🦆' },
             ],
             east: [
-                { id: 'e_r2_1', t1: 'Hurricanes', city1: 'Caroline', t2: 'Penguins', city2: 'Pittsburgh', s1: 0, s2: 0, seed1: '1', seed2: '2' },
-                { id: 'e_r2_2', t1: 'Sabres', city1: 'Buffalo', t2: 'Canadiens', city2: 'Montréal', s1: 0, s2: 0, seed1: '1', seed2: '3' },
+                { id: 'e_r2_1', t1: 'Sabres', city1: 'Buffalo', t2: 'Canadiens', city2: 'Montréal', s1: 0, s2: 0, seed1: '1', seed2: '3', icon1: '⚔️', icon2: '🇨🇦' },
+                { id: 'e_r2_2', t1: 'Hurricanes', city1: 'Caroline', t2: 'Flyers', city2: 'Philadelphie', s1: 0, s2: 0, seed1: '1', seed2: '3', icon1: '🌀', icon2: '🧡' },
             ]
         };
 
@@ -64,10 +64,10 @@
                 link.click();
             };
 
-            const TeamRow = ({ name, city, score, seed, isWinner, isHabs, onChange }) => (
+            const TeamRow = ({ name, city, score, seed, icon, isWinner, isHabs, onChange }) => (
                 <div className={`flex items-center justify-between p-4 rounded-lg transition-all duration-300 ${isWinner ? 'bg-[#E3FC00]/20' : 'bg-black/30'}`}>
                     <div className="flex items-center gap-4 overflow-visible">
-                        <span className="text-xs font-black text-zinc-600 w-4">{seed}</span>
+                        <span className="text-xl flex-shrink-0 self-center">{icon}</span>
                         <div className="flex flex-col overflow-visible">
                             <span className={`team-name text-xl font-black tracking-tighter block ${isHabs ? 'text-[#AF1E2D]' : 'text-white'} ${isWinner ? 'text-[#E3FC00]' : ''}`}>
                                 {name.toUpperCase()}
@@ -76,7 +76,7 @@
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        {isWinner && <span className="text-[#E3FC00]">🏆</span>}
+                        {isWinner && <span className="text-[#E3FC00] text-xl">🏆</span>}
                         <input 
                             type="number" 
                             value={score} 
@@ -97,7 +97,7 @@
                                 <div className="text-[#E3FC00] font-black text-xs tracking-widest uppercase">Deuxième Tour</div>
                             </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
+                        <div className="flex flex-col md:items-end gap-2">
                             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Saisir votre nom</span>
                             <input 
                                 type="text" 
@@ -132,12 +132,12 @@
                             <div className="space-y-12">
                                 <div className="flex items-center gap-4">
                                     <div className="bg-[#192168] px-6 py-3 font-black italic text-3xl rounded-xl shadow-lg text-white">OUEST</div>
-                                    <div className="h-px bg-zinc-800 flex-grow opacity-30"></div>
+                                    <div className="h-[2px] bg-gradient-to-r from-[#192168] to-transparent flex-grow opacity-30"></div>
                                 </div>
                                 {round2.west.map(s => (
                                     <div key={s.id} className="bg-zinc-900/50 p-5 rounded-3xl border-l-8 border-[#192168] space-y-4 shadow-inner">
-                                        <TeamRow name={s.t1} city={s.city1} score={s.s1} seed={s.seed1} isWinner={s.s1 === 4} onChange={(v) => handleScoreChange('west', s.id, 1, v)} />
-                                        <TeamRow name={s.t2} city={s.city2} score={s.s2} seed={s.seed2} isWinner={s.s2 === 4} onChange={(v) => handleScoreChange('west', s.id, 2, v)} />
+                                        <TeamRow name={s.t1} city={s.city1} score={s.s1} seed={s.seed1} icon={s.icon1} isWinner={s.s1 === 4} onChange={(v) => handleScoreChange('west', s.id, 1, v)} />
+                                        <TeamRow name={s.t2} city={s.city2} score={s.s2} seed={s.seed2} icon={s.icon2} isWinner={s.s2 === 4} onChange={(v) => handleScoreChange('west', s.id, 2, v)} />
                                     </div>
                                 ))}
                             </div>
@@ -145,13 +145,13 @@
                             {/* EST */}
                             <div className="space-y-12">
                                 <div className="flex items-center gap-4 justify-end">
-                                    <div className="h-px bg-zinc-800 flex-grow opacity-30"></div>
+                                    <div className="h-[2px] bg-gradient-to-l from-[#AF1E2D] to-transparent flex-grow opacity-30"></div>
                                     <div className="bg-[#AF1E2D] px-6 py-3 font-black italic text-3xl rounded-xl shadow-lg text-white">EST</div>
                                 </div>
                                 {round2.east.map(s => (
                                     <div key={s.id} className="bg-zinc-900/50 p-5 rounded-3xl border-r-8 border-[#AF1E2D] space-y-4 shadow-inner text-left">
-                                        <TeamRow name={s.t1} city={s.city1} score={s.s1} seed={s.seed1} isWinner={s.s1 === 4} isHabs={s.t1 === 'Canadiens'} onChange={(v) => handleScoreChange('east', s.id, 1, v)} />
-                                        <TeamRow name={s.t2} city={s.city2} score={s.s2} seed={s.seed2} isWinner={s.s2 === 4} isHabs={s.t2 === 'Canadiens'} onChange={(v) => handleScoreChange('east', s.id, 2, v)} />
+                                        <TeamRow name={s.t1} city={s.city1} score={s.s1} seed={s.seed1} icon={s.icon1} isWinner={s.s1 === 4} isHabs={s.t1 === 'Canadiens'} onChange={(v) => handleScoreChange('east', s.id, 1, v)} />
+                                        <TeamRow name={s.t2} city={s.city2} score={s.s2} seed={s.seed2} icon={s.icon2} isWinner={s.s2 === 4} isHabs={s.t2 === 'Canadiens'} onChange={(v) => handleScoreChange('east', s.id, 2, v)} />
                                     </div>
                                 ))}
                             </div>
