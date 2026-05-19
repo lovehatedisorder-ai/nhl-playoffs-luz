@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LUZ STUDIO | NHL 2026 - ROUND 2</title>
+    <title>LUZ STUDIO | FINALES 2026</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { background-color: #000; color: #fff; font-family: 'Helvetica', Arial, sans-serif; }
-        .luz-helvetica { font-family: 'Helvetica', Arial, sans-serif; }
+        body { background-color: #000; color: #fff; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        .winner-glow { box-shadow: 0 0 30px rgba(227, 252, 0, 0.4); border-color: #E3FC00 !important; }
+        .habs-text { color: #AF1E2D; }
+        .luz-neon { color: #E3FC00; }
+        .luz-bg-neon { background-color: #E3FC00; }
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
@@ -21,28 +24,52 @@
     <script type="text/babel">
         const { useState, useRef } = React;
 
-        // ÉQUIPES SELON TON IMAGE
-        const INITIAL_TEAMS = {
-            west: [
-                { id: 'w_r2_1', t1: 'Avalanche', city1: 'Colorado', t2: 'Wild', city2: 'Minnesota', s1: 0, s2: 0, seed1: '1', seed2: '3', icon1: '🏔️', icon2: '🌲' },
-                { id: 'w_r2_2', t1: 'Golden Knights', city1: 'Vegas', t2: 'Ducks', city2: 'Anaheim', s1: 0, s2: 0, seed1: '1', seed2: '3', icon1: '⚔️', icon2: '🦆' },
-            ],
-            east: [
-                { id: 'e_r2_1', t1: 'Sabres', city1: 'Buffalo', t2: 'Canadiens', city2: 'Montréal', s1: 0, s2: 0, seed1: '1', seed2: '3', icon1: '⚔️', icon2: '🇨🇦' },
-                { id: 'e_r2_2', t1: 'Hurricanes', city1: 'Caroline', t2: 'Flyers', city2: 'Philadelphie', s1: 0, s2: 0, seed1: '1', seed2: '3', icon1: '🌀', icon2: '🧡' },
-            ]
-        };
+        // --- DONNÉES AVEC LOGOS OFFICIELS NHL ---
+        const ROUND_3_TEAMS = [
+            { 
+                id: 'west_final', 
+                conf: 'OUEST',
+                color: '#192168',
+                t1: { 
+                    name: 'Avalanche', city: 'Colorado', 
+                    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/4/45/Colorado_Avalanche_logo.svg/1200px-Colorado_Avalanche_logo.svg.png' 
+                },
+                t2: { 
+                    name: 'Golden Knights', city: 'Vegas', 
+                    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/ac/Vegas_Golden_Knights_logo.svg/1200px-Vegas_Golden_Knights_logo.svg.png' 
+                }
+            },
+            { 
+                id: 'east_final', 
+                conf: 'EST',
+                color: '#AF1E2D',
+                t1: { 
+                    name: 'Canadiens', city: 'Montréal', 
+                    logoUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Montreal_Canadiens.svg/1200px-Montreal_Canadiens.svg.png' 
+                },
+                t2: { 
+                    name: 'Hurricanes', city: 'Caroline', 
+                    logoUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/3/32/Carolina_Hurricanes_logo.svg/1200px-Carolina_Hurricanes_logo.svg.png' 
+                }
+            }
+        ];
 
         function App() {
             const [userName, setUserName] = useState('');
-            const [round2, setRound2] = useState(INITIAL_TEAMS);
+            const [predictions, setPredictions] = useState({});
             const bracketRef = useRef(null);
 
-            const handleScoreChange = (side, seriesId, teamIndex, value) => {
-                const score = Math.min(4, Math.max(0, parseInt(value) || 0));
-                setRound2(prev => ({
+            const selectWinner = (seriesId, teamName) => {
+                setPredictions(prev => ({
                     ...prev,
-                    [side]: prev[side].map(s => s.id === seriesId ? { ...s, [`s${teamIndex}`]: score } : s)
+                    [seriesId]: { ...prev[seriesId], winner: teamName, games: prev[seriesId]?.games || 6 }
+                }));
+            };
+
+            const setGames = (seriesId, num) => {
+                setPredictions(prev => ({
+                    ...prev,
+                    [seriesId]: { ...prev[seriesId], games: num }
                 }));
             };
 
@@ -50,111 +77,128 @@
                 const canvas = await html2canvas(bracketRef.current, { 
                     backgroundColor: '#000000', 
                     scale: 2,
-                    onclone: (clonedDoc) => {
-                        clonedDoc.querySelectorAll('.team-name').forEach(el => {
-                            el.style.lineHeight = '1.4';
-                            el.style.paddingBottom = '5px';
-                            el.style.display = 'block';
-                        });
-                    }
+                    useCORS: true // Nécessaire pour charger les logos externes sur le canvas
                 });
                 const link = document.createElement('a');
                 link.href = canvas.toDataURL("image/png");
-                link.download = `LUZ-ROUND2-${userName || 'prediction'}.png`;
+                link.download = `LUZ-FINAL-PREDICTION.png`;
                 link.click();
             };
 
-            const TeamRow = ({ name, city, score, seed, icon, isWinner, isHabs, onChange }) => (
-                <div className={`flex items-center justify-between p-4 rounded-lg transition-all duration-300 ${isWinner ? 'bg-[#E3FC00]/20' : 'bg-black/30'}`}>
-                    <div className="flex items-center gap-4 overflow-visible">
-                        <span className="text-xl flex-shrink-0 self-center">{icon}</span>
-                        <div className="flex flex-col overflow-visible">
-                            <span className={`team-name text-xl font-black tracking-tighter block ${isHabs ? 'text-[#AF1E2D]' : 'text-white'} ${isWinner ? 'text-[#E3FC00]' : ''}`}>
-                                {name.toUpperCase()}
-                            </span>
-                            <span className="city-name text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">{city}</span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        {isWinner && <span className="text-[#E3FC00] text-xl">🏆</span>}
-                        <input 
-                            type="number" 
-                            value={score} 
-                            onChange={(e) => onChange(e.target.value)}
-                            className={`w-14 h-12 bg-black border-2 rounded-lg text-center text-2xl font-black outline-none ${isWinner ? 'border-[#E3FC00] text-[#E3FC00]' : 'border-zinc-800 text-zinc-500'}`}
-                        />
-                    </div>
-                </div>
-            );
-
             return (
-                <div className="min-h-screen p-6 md:p-12 max-w-6xl mx-auto">
-                    <header className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 text-white">
-                        <div className="space-y-4">
-                            <div className="text-7xl font-bold uppercase tracking-tighter luz-helvetica">LUZ STUDIO</div>
-                            <div className="flex items-center gap-3">
-                                <div className="bg-[#AF1E2D] text-white text-xs font-black px-3 py-1 rounded italic">NHL PLAYOFFS 2026</div>
-                                <div className="text-[#E3FC00] font-black text-xs tracking-widest uppercase">Deuxième Tour</div>
+                <div className="min-h-screen p-4 md:p-10 max-w-5xl mx-auto">
+                    {/* HEADER */}
+                    <header className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                        <div>
+                            <h1 className="text-6xl font-black tracking-tighter mb-2">LUZ STUDIO</h1>
+                            <div className="flex gap-3 items-center">
+                                <span className="bg-[#AF1E2D] text-white px-3 py-1 text-xs font-black italic rounded">NHL 2026</span>
+                                <span className="text-[#E3FC00] font-black uppercase text-xs tracking-widest">Finales de Conférence</span>
                             </div>
                         </div>
-                        <div className="flex flex-col md:items-end gap-2">
-                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Saisir votre nom</span>
+                        <div className="flex flex-col md:items-end gap-2 w-full md:w-auto">
+                            <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Saisir ton nom</label>
                             <input 
                                 type="text" 
-                                placeholder="VOTRE NOM" 
-                                value={userName}
+                                placeholder="TON NOM" 
+                                className="bg-zinc-900 border-2 border-zinc-800 p-4 rounded-2xl text-2xl font-black text-[#E3FC00] outline-none focus:border-[#E3FC00] transition-all w-full md:w-80"
                                 onChange={(e) => setUserName(e.target.value)}
-                                className="bg-zinc-900 border-2 border-zinc-800 p-4 rounded-2xl text-2xl font-black text-[#E3FC00] w-full md:w-80 outline-none focus:border-[#E3FC00] transition-all"
                             />
                         </div>
                     </header>
 
-                    <button onClick={exportAsImage} className="bg-[#E3FC00] text-black font-black px-10 py-5 rounded-2xl font-black uppercase mb-12 shadow-xl hover:scale-105 transition-transform active:scale-95">
+                    <button 
+                        onClick={exportAsImage}
+                        className="luz-bg-neon text-black font-black px-10 py-5 rounded-2xl uppercase mb-10 hover:scale-105 transition-transform shadow-xl active:scale-95"
+                    >
                         Sauvegarder vos prédictions
                     </button>
 
-                    <div ref={bracketRef} className="bg-zinc-950 p-8 md:p-16 rounded-[50px] border border-zinc-900 shadow-2xl relative">
-                        <div className="absolute top-0 right-0 p-12 text-8xl font-black text-white/5 italic select-none">R2</div>
+                    {/* BRACKET AREA */}
+                    <div ref={bracketRef} className="bg-zinc-950 p-8 md:p-16 rounded-[48px] border border-zinc-900 shadow-2xl relative overflow-visible">
+                        <div className="absolute top-0 right-0 p-16 text-[20vw] font-black text-white/5 italic select-none leading-none opacity-5">LUZ</div>
                         
-                        <div className="relative z-10 mb-16 flex justify-between items-end border-b border-zinc-900 pb-10">
+                        <div className="relative z-10 flex justify-between items-end mb-16 border-b border-zinc-900 pb-10">
                             <div>
-                                <div className="text-[#E3FC00] font-black text-xs uppercase tracking-[0.5em] mb-2">Participant</div>
-                                <div className="text-6xl font-black italic uppercase tracking-tighter text-white">{userName || "À Définir"}</div>
+                                <p className="luz-neon text-[10px] font-black tracking-[0.4em] uppercase mb-1">Feuille Officielle de</p>
+                                <h2 className="text-6xl font-black italic uppercase tracking-tighter text-white">{userName || "À Définir"}</h2>
                             </div>
                             <div className="text-right">
-                                <div className="text-zinc-500 font-bold text-xs uppercase tracking-widest mb-1">NHL Playoffs</div>
-                                <div className="text-7xl font-black text-zinc-900 leading-none">2026</div>
+                                <p className="text-zinc-600 font-bold text-xs uppercase tracking-widest">Stanley Cup Playoffs</p>
+                                <p className="text-7xl font-black text-zinc-900 leading-none">2026</p>
                             </div>
                         </div>
 
                         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-16">
-                            {/* OUEST */}
-                            <div className="space-y-12">
-                                <div className="flex items-center gap-4">
-                                    <div className="bg-[#192168] px-6 py-3 font-black italic text-3xl rounded-xl shadow-lg text-white">OUEST</div>
-                                    <div className="h-[2px] bg-gradient-to-r from-[#192168] to-transparent flex-grow opacity-30"></div>
-                                </div>
-                                {round2.west.map(s => (
-                                    <div key={s.id} className="bg-zinc-900/50 p-5 rounded-3xl border-l-8 border-[#192168] space-y-4 shadow-inner">
-                                        <TeamRow name={s.t1} city={s.city1} score={s.s1} seed={s.seed1} icon={s.icon1} isWinner={s.s1 === 4} onChange={(v) => handleScoreChange('west', s.id, 1, v)} />
-                                        <TeamRow name={s.t2} city={s.city2} score={s.s2} seed={s.seed2} icon={s.icon2} isWinner={s.s2 === 4} onChange={(v) => handleScoreChange('west', s.id, 2, v)} />
+                            {ROUND_3_TEAMS.map(series => (
+                                <div key={series.id} className="space-y-8">
+                                    <div className="flex items-center gap-4">
+                                        <div style={{backgroundColor: series.color}} className="px-6 py-3 font-black italic text-3xl rounded-xl shadow-lg text-white">
+                                            {series.conf}
+                                        </div>
+                                        <div className="h-[2px] bg-gradient-to-r from-zinc-800 to-transparent flex-grow opacity-50"></div>
                                     </div>
-                                ))}
-                            </div>
 
-                            {/* EST */}
-                            <div className="space-y-12">
-                                <div className="flex items-center gap-4 justify-end">
-                                    <div className="h-[2px] bg-gradient-to-l from-[#AF1E2D] to-transparent flex-grow opacity-30"></div>
-                                    <div className="bg-[#AF1E2D] px-6 py-3 font-black italic text-3xl rounded-xl shadow-lg text-white">EST</div>
-                                </div>
-                                {round2.east.map(s => (
-                                    <div key={s.id} className="bg-zinc-900/50 p-5 rounded-3xl border-r-8 border-[#AF1E2D] space-y-4 shadow-inner text-left">
-                                        <TeamRow name={s.t1} city={s.city1} score={s.s1} seed={s.seed1} icon={s.icon1} isWinner={s.s1 === 4} isHabs={s.t1 === 'Canadiens'} onChange={(v) => handleScoreChange('east', s.id, 1, v)} />
-                                        <TeamRow name={s.t2} city={s.city2} score={s.s2} seed={s.seed2} icon={s.icon2} isWinner={s.s2 === 4} isHabs={s.t2 === 'Canadiens'} onChange={(v) => handleScoreChange('east', s.id, 2, v)} />
+                                    <div className="bg-zinc-900/40 p-8 rounded-[40px] border border-zinc-800 space-y-6 shadow-inner">
+                                        {/* TEAM 1 */}
+                                        <div 
+                                            onClick={() => selectWinner(series.id, series.t1.name)}
+                                            className={`cursor-pointer p-6 rounded-3xl border-2 transition-all duration-300 flex items-center justify-between gap-6 ${predictions[series.id]?.winner === series.t1.name ? 'winner-glow bg-[#E3FC00]/10 border-[#E3FC00]' : 'bg-black border-transparent hover:border-zinc-700'}`}
+                                        >
+                                            <div className="flex items-center gap-6 overflow-visible">
+                                                <img src={series.t1.logoUrl} alt={series.t1.name} className="w-12 h-12 flex-shrink-0 object-contain" />
+                                                <div className="flex flex-col">
+                                                    <span className={`text-2xl font-black italic ${series.t1.name === 'Canadiens' ? 'habs-text' : 'text-white'}`}>{series.t1.name.toUpperCase()}</span>
+                                                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{series.t1.city}</span>
+                                                </div>
+                                            </div>
+                                            {predictions[series.id]?.winner === series.t1.name && <span className="text-[#E3FC00] font-black text-sm italic">GAGNANT</span>}
+                                        </div>
+
+                                        <div className="text-center text-zinc-800 font-black italic select-none">VS</div>
+
+                                        {/* TEAM 2 */}
+                                        <div 
+                                            onClick={() => selectWinner(series.id, series.t2.name)}
+                                            className={`cursor-pointer p-6 rounded-3xl border-2 transition-all duration-300 flex items-center justify-between gap-6 ${predictions[series.id]?.winner === series.t2.name ? 'winner-glow bg-[#E3FC00]/10 border-[#E3FC00]' : 'bg-black border-transparent hover:border-zinc-700'}`}
+                                        >
+                                            <div className="flex items-center gap-6 overflow-visible">
+                                                <img src={series.t2.logoUrl} alt={series.t2.name} className="w-12 h-12 flex-shrink-0 object-contain" />
+                                                <div className="flex flex-col">
+                                                    <span className={`text-2xl font-black italic ${series.t2.name === 'Canadiens' ? 'habs-text' : 'text-white'}`}>{series.t2.name.toUpperCase()}</span>
+                                                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{series.t2.city}</span>
+                                                </div>
+                                            </div>
+                                            {predictions[series.id]?.winner === series.t2.name && <span className="text-[#E3FC00] font-black text-sm italic">GAGNANT</span>}
+                                        </div>
+
+                                        {/* GAMES SELECTOR */}
+                                        {predictions[series.id]?.winner && (
+                                            <div className="pt-8 mt-8 border-t border-zinc-800">
+                                                <p className="text-center text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">Gagne en combien de matchs ?</p>
+                                                <div className="flex justify-center gap-3">
+                                                    {[4, 5, 6, 7].map(n => (
+                                                        <button
+                                                            key={n}
+                                                            onClick={() => setGames(series.id, n)}
+                                                            className={`w-14 h-14 rounded-full font-black text-xl transition-all duration-300 ${predictions[series.id]?.games === n ? 'luz-bg-neon text-black scale-110 shadow-lg' : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700 hover:text-white'}`}
+                                                        >
+                                                            {n}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <p className="text-center mt-6 text-[#E3FC00] font-black italic text-lg tracking-tight">
+                                                    {predictions[series.id].winner.toUpperCase()} EN {predictions[series.id].games} MATCHS
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="mt-16 text-center text-zinc-800 font-black uppercase text-xs tracking-[1em] opacity-40">
+                            LUZ STUDIO • DIGITAL PREDICTION SHEET
                         </div>
                     </div>
                 </div>
